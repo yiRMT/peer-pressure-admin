@@ -3,16 +3,19 @@ import UserList from '@/components/UserList';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import * as React from 'react';
-import { Button, Modal, Box, Fab, IconButton } from '@mui/material';
+import { Button, Modal, Box, Fab, IconButton, Alert, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import EditAccount from '@/components/EditAccount';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloseIcon from '@mui/icons-material/Close';
+import CreateGroup from '@/components/CreateGroup';
 
 export default function Home() {
   const [openCreateAccountModal, setCreateAccountOpenModal] = useState(false);
   const [openEditAccountModal, setEditAccountOpenModal] = useState(false);
+  const [openCreateGroupModal, setCreateGroupOpenModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [country, setCountry] = useState('JP');
   
   const handleAddUser = () => {
     console.log("Add User");
@@ -26,6 +29,59 @@ export default function Home() {
       return;
     }
     setEditAccountOpenModal(true);
+  }
+
+  const handleDeleteUser = async () => {
+    console.log("Delete User");
+    if (selectedUsers.length === 0) {
+      alert('Please select a user to delete');
+      return;
+    }
+
+    const uids = selectedUsers.map((user) => user.uid);
+    console.log(uids);
+
+    try {
+      const response = await fetch('/api/deleteuser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ users: uids }),
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleCreateGroup = async () => {
+    console.log("Create Group");
+    
+    setCreateGroupOpenModal(true);
+    /*
+    if (selectedUsers.length === 0) {
+      alert('Please select a user to create a group');
+      return;
+    }
+
+    const uids = selectedUsers.map((user) => user.uid);
+    console.log(uids);
+    console.log(selectedUsers);
+
+    try {
+      const response = await fetch('/api/creategroup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          groupName: 'groupX',
+          users: selectedUsers 
+        }),
+      });
+    } catch (error) {
+      console.log(error);
+    }*/
   }
 
   const handleSelection = (value) => {
@@ -53,11 +109,22 @@ export default function Home() {
       <Head>
         <title>Home</title>
       </Head>
-      <div>
-        <h1 className="text-4xl font-bold text-center">
-          Welcome to the Peer Pressure Admin
+      <div className='flex flex-col items-center'>
+        <h1 className="text-4xl font-bold my-10">
+          Peer Pressure Experiment Admin
         </h1>
-        <div className='flex gap-4'>
+        <div className='my-5'>
+          <ToggleButtonGroup
+              color="primary"
+              value={country}
+              exclusive
+              onChange={(event, value) => setCountry(value)}
+          >
+              <ToggleButton value={'JP'}>🇯🇵 Japan</ToggleButton>
+              <ToggleButton value={'AU'}>🇦🇺 Australia</ToggleButton>
+          </ToggleButtonGroup>
+        </div>
+        <div className='flex gap-4 my-2'>
           <Button 
             onClick={handleAddUser}
           >
@@ -66,7 +133,10 @@ export default function Home() {
           <Button onClick={handleEditUser}>
             Edit User
           </Button>
-          <Button>
+          <Button onClick={handleDeleteUser}>
+            Delete User
+          </Button>
+          <Button onClick={handleCreateGroup}>
             Create Group
           </Button>
           <IconButton color='primary'>
@@ -83,14 +153,14 @@ export default function Home() {
             >
               <CloseIcon />
             </Fab>
-            <CreateAccount />
+            <CreateAccount country={country}/>
           </Box>
         </Modal>
         <Modal
           open={openEditAccountModal}
           onClose={() => setEditAccountOpenModal(false)}
         >
-          <Box sx={{  }}>
+          <Box className="mx-40 mt-10">
             <Fab 
               onClick={() => setEditAccountOpenModal(false)}
             >
@@ -99,7 +169,20 @@ export default function Home() {
             <EditAccount currentUserInfo={selectedUsers[0]}/>
           </Box>
         </Modal>
-        <UserList handleSelection={handleSelection}/>
+        <Modal
+          open={openCreateGroupModal}
+          onClose={() => setCreateGroupOpenModal(false)}
+        >
+          <Box sx={{  }}>
+            <Fab 
+              onClick={() => setCreateGroupOpenModal(false)}
+            >
+              <CloseIcon />
+            </Fab>
+            <CreateGroup selectedUsersInfo={selectedUsers} country={country}/>
+          </Box>
+        </Modal>
+        <UserList handleSelection={handleSelection} country={country}/>
       </div>
     </>
   )

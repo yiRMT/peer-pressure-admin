@@ -1,25 +1,38 @@
 import { useEffect, useState } from 'react';
 
-export default function CreateAccount() {
+export default function CreateAccount(props) {
   const [accountInfo, setAccountInfo] = useState({
+    uid: '',
     name: '',
     email: '',
     password: '',
     confirmPassword: '',
   });
 
+  const country = props.country;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     console.log(accountInfo.name, accountInfo.email, accountInfo.password, accountInfo.confirmPassword);
     if (passwordValidation(accountInfo.password, accountInfo.confirmPassword)) {
+      // If each field is not empty string, then send the request to the server
       const body = {
-        name: accountInfo.name,
+        uid: accountInfo.uid,
+        displayName: accountInfo.name,
         email: accountInfo.email,
         password: accountInfo.password,
+        country: country,
       }
+
+      for (const [key, value] of Object.entries(body)) {
+        if (value === '') {
+          delete body[key];
+        }
+      }
+      
       try {
-        const response = await fetch('/api/signup', {
+        const response = await fetch('/api/createuser', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -47,6 +60,15 @@ export default function CreateAccount() {
     <>
       <div>
         <form className="flex flex-col items-center justify-center">
+          <input className="w-1/2 p-2 my-2 border-2 border-gray-400 rounded-md dark:text-black" type="text" placeholder="UID" 
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setAccountInfo((props) => ({
+                ...props,
+                uid: val !== null ? val : '',
+              }))
+            }}
+          />
           <input className="w-1/2 p-2 my-2 border-2 border-gray-400 rounded-md dark:text-black" type="text" placeholder="Name" 
             onChange={(e) => {
               const val = e.currentTarget.value;

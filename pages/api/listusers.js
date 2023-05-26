@@ -1,4 +1,4 @@
-import { auth } from "@/firebase/server";
+import { auth, db } from "@/firebase/server";
 
 const listAllUsers = async (nextPageToken) => {
   try {
@@ -17,10 +17,54 @@ const listAllUsers = async (nextPageToken) => {
   }
 }
 
+const listCountryAndGroupId = async (uid) => {
+  try {
+    const userRef = await db.collection('users').doc(uid).get();
+    if (!userRef.exists) {
+      console.log('No such document!');
+      return;
+    }
+    const user = userRef.data();
+    return {
+      groupId: user.groupId,
+      country: user.country,
+    };
+  } catch (error) {
+    console.log('Error listing users:', error);
+  }
+}
+
 const handler = async (req, res) => {
   try {
+    const country = req.body.country;
     const listUsersResult = await listAllUsers();
-    res.status(200).json({ listUsersResult });
+    const users = listUsersResult.users;
+    var usersWithGroupId = await Promise.all(users.map(async (user) => {
+      const storedCountryAndGroupId = await listCountryAndGroupId(user.uid);
+      
+      if (storedCountryAndGroupId.country !== country) {
+        return;
+      }
+
+      if (storedCountryAndGroupId.groupId === undefined) {
+        return {
+          ...user,
+          groupId: "",
+        };
+      }
+      
+      return {
+        ...user,
+        groupId: storedCountryAndGroupId.groupId,
+      }
+    }));
+    // remove undefined values
+    usersWithGroupId = usersWithGroupId.filter((user) => user !== undefined);
+    
+    console.log(usersWithGroupId);
+    res.status(200).json({
+      users: usersWithGroupId,
+    });
   } catch (error) {
     console.log('Error listing users:', error);
     res.status(500).json({ error });
