@@ -2,9 +2,9 @@ import { ArrowDropDown, MoreVert, PersonRemove, ModeEdit } from "@mui/icons-mate
 import { Button, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { useEffect, useState } from "react";
 
-export default function UserList(props) {
+export default function GroupList(props) {
   const country = props.country;
-  const [users, setUsers] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const handleClick = (event, user) => {
@@ -21,9 +21,9 @@ export default function UserList(props) {
     handleSelection([]);
   };
 
-  const getUsers = async () => {
+  const getGroups = async () => {
     try {
-      const response = await fetch('/api/listusers', {
+      const response = await fetch('/api/listgroups', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -31,14 +31,14 @@ export default function UserList(props) {
         body: JSON.stringify({ country: props.country }),
       });
       const data = await response.json();
-      setUsers(data.users);
+      setGroups(data.groups);
     } catch (error) {
       console.log(error);
     }
   }
 
   useEffect(() => {
-    getUsers();
+    getGroups();
   }, [country]);
 
   const handleSelection = (newArray) => {
@@ -57,35 +57,12 @@ export default function UserList(props) {
             Select
           </th>
           <th className="">
-            Display Name
+            Group ID
             {/* Sort button */}
             <IconButton
               size="small"
               onClick={() => {
-                const sortedUsers = [...users].sort((a, b) => {
-                  if (a.displayName < b.displayName) {
-                    return -1;
-                  }
-                  if (a.displayName > b.displayName) {
-                    return 1;
-                  }
-                  return 0;
-                });
-                setUsers(sortedUsers);
-              }}
-            >
-              <ArrowDropDown/>
-            </IconButton>
-          </th>
-          <th className="">UID</th>
-          <th className="">Email</th>
-          <th className="">
-            Group
-            {/* Sort button */}
-            <IconButton
-              size="small"
-              onClick={() => {
-                const sortedUsers = [...users].sort((a, b) => {
+                const sortedUsers = [...groups].sort((a, b) => {
                   if (a.groupId < b.groupId) {
                     return -1;
                   }
@@ -94,41 +71,40 @@ export default function UserList(props) {
                   }
                   return 0;
                 });
-                setUsers(sortedUsers);
+                setGroups(sortedUsers);
               }}
             >
               <ArrowDropDown/>
             </IconButton>
           </th>
+          <th className="">Exp Mode</th>
           <th></th>
         </tr>
       </thead>
-      { users.length > 0 ? (
+      { groups.length > 0 ? (
         <tbody>
-          {users.map((user) => {
+          {groups.map((group) => {
             return (
-              <tr key={user.uid}>
+              <tr key={group.groupId}>
                 <td className="text-center">
                   <input 
                     type="checkbox"
                     onChange={(e) => {
                       const val = e.currentTarget.checked;
                       if (val) {
-                        handleSelection((props) => [...props, user]);
+                        handleSelection((props) => [...props, group]);
                       } else {
-                        handleSelection((props) => props.filter((item) => item.uid !== user.uid));
+                        handleSelection((props) => props.filter((item) => item.uid !== group.uid));
                       }
                     }}
                   />
                 </td>
-                <td className="">{user.displayName}</td>
-                <td className="">{user.uid}</td>
-                <td className="">{user.email}</td>
-                <td className="">{user.groupId}</td>
+                <td className="">{group.groupId}</td>
+                <td className="">{group.expMode}</td>
                 <td className="">
                   <IconButton 
                     onClick={(e) => {
-                      handleClick(e, user)
+                      handleClick(e, group)
                     }}
                   >
                     <MoreVert/>
@@ -142,13 +118,13 @@ export default function UserList(props) {
                       'aria-labelledby': 'basic-button',
                     }}
                   >
-                    <MenuItem onClick={() => handleEditUser(user)}>
+                    <MenuItem onClick={() => handleEditUser(group)}>
                       <ListItemIcon>
                         <ModeEdit fontSize="small" />
                       </ListItemIcon>
                       <ListItemText>Edit</ListItemText>
                     </MenuItem>
-                    <MenuItem onClick={() => handleDeleteUser(user)}>
+                    <MenuItem onClick={() => handleDeleteUser(group)}>
                       <ListItemIcon>
                         <PersonRemove fontSize="small" />
                       </ListItemIcon>
@@ -162,7 +138,7 @@ export default function UserList(props) {
       ) : (
         <tbody>
           <tr>
-            <td className="text-center" colSpan="5">No users found</td>
+            <td className="text-center" colSpan="5">No group found</td>
           </tr>
         </tbody>
       )}

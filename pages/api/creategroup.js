@@ -13,8 +13,11 @@ const handler = async (req, res) => {
       acc[user.uid] = user.displayName;
       return acc;
     }, {});
+    
+    const country = req.body.country;
 
     const groupRef = await db.collection('groups').doc(req.body.groupName).set({
+      country: country,
       score: {},
       names: names,
       token: {},

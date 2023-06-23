@@ -32,8 +32,9 @@ export default function CreateGroup(props) {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
+          country: props.country,
           groupName: groupInfo.groupId,
-          users: selectedUsers 
+          users: selectedUsers
         }),
       });
     } catch (error) {
